@@ -1,0 +1,281 @@
+{
+  "_doc": "Penny weekly no-AI scan: generic defaults (ships with the template). install.sh copies this to thresholds.json if missing; tune thresholds.json after 2-3 weekly runs. Relative paths are relative to the Penny folder. Owner-specific data goes in local/owner.json, never here.",
+  "schedule": {
+    "cron": "5 7 * * 1",
+    "cron_comment": "# Penny DOGE weekly no-AI scan"
+  },
+  "paths": {
+    "agents_dir": "/home/box/agent-data/agents",
+    "owner_file": "local/owner.json",
+    "webhook_file": ".webhook.json",
+    "ledger_file": "ledger/raised.json",
+    "pending_file": "ledger/pending.json",
+    "history_dir": "history",
+    "summary_dir": "summary",
+    "wake_queue": "wake_queue.log",
+    "cron_log": "cron.log",
+    "run_all_log": "logs/run_all.last.log",
+    "_cli_repo_roots_doc": "CLI session cwd -> repo = first folder under the longest matching root (else the folder name). Generic roots only: '~' expands to the box user's home. Add owner-specific roots in local/owner.json cli_repo_roots. Tip: run CLI jobs from the project folder (not the bare root), so each repo maps cleanly to one bot.",
+    "cli_repo_roots": [
+      "~",
+      "/workspace"
+    ]
+  },
+  "freshness": {
+    "stale_days": 10
+  },
+  "output": {
+    "top_n": 5,
+    "stale_watch_n": 5,
+    "summary_max_bytes": 7000
+  },
+  "wake": {
+    "worse_factor": 2.0,
+    "timeout_s": 8,
+    "always_weekly_cost": false,
+    "_always_weekly_cost_doc": "If true, quiet weeks still POST mode=cost_only so the bot sends a one-line weekly cost note (costs one short wake)."
+  },
+  "estimates": {
+    "_doc": "est_runs_wk_saved is in run-equivalents/week. A gated quiet run costs (1 - gate_saving_fraction) of a full run. A subagent spawn counts as subagent_run_equiv runs.",
+    "gate_saving_fraction": 0.8,
+    "a6_noise_fraction": 0.5,
+    "subagent_run_equiv": 1.0,
+    "cli_usd_per_tick": 1e-10,
+    "cli_window_days": 7,
+    "cli_batch_target_sessions_per_week": 3,
+    "_bot_usd_doc": "Converts bot-work estimates (replay-token proxy + est. calls x est_output_tokens_per_call) to ~$. If both input and output prices are set they are used; otherwise the blended price. Default blended $0.29/M = total $ / total tokens of the exact Grok Build CLI data on Oct 2, 2026 (208.6M tokens, $60.87, ~94% cached input). Replay proxy ignores cache discounts, so this is a rough order of magnitude.",
+    "bot_usd_per_m_tokens": 0.29,
+    "bot_usd_per_m_input_tokens": null,
+    "bot_usd_per_m_output_tokens": null,
+    "est_output_tokens_per_call": 1700
+  },
+  "advice": {
+    "A1": {
+      "min_quiet_pct": 95,
+      "min_runs": 20
+    },
+    "A2": {
+      "min_runs_per_week": 50,
+      "max_surfaced_pct": 10,
+      "max_fires_per_hour": 1,
+      "target_runs_per_week": 5
+    },
+    "A4": {
+      "min_routines": 3,
+      "window_min": 120,
+      "max_reply24h_pct": 25,
+      "max_fires_per_day": 1,
+      "no_bursts_counts_as_unreplied": true
+    },
+    "A5": {
+      "window_min": 30,
+      "min_keyword_overlap_pct": 40,
+      "min_word_len": 4,
+      "min_prompt_words": 15
+    },
+    "A6": {
+      "min_surfaced_per_week": 2,
+      "quiet_heavy_pct": 80,
+      "min_runs": 5
+    },
+    "A7": {
+      "min_calls_per_run": 25,
+      "min_quiet_pct": 40
+    },
+    "A9": {
+      "min_age_days": 7,
+      "one_shot_regex": "(?i)(20\\d\\d|tonight|tomorrow|one[- ]?time|one[- ]?shot|\\bonce\\b|reminder)"
+    },
+    "A10": {
+      "min_bursts": 3,
+      "max_replies": 0,
+      "not_opened_days": 14
+    },
+    "A13": {
+      "max_log_kb": 30
+    },
+    "A15": {
+      "max_tasks_per_run": 2
+    },
+    "A16": {
+      "min_errors_in_window": 2
+    },
+    "A17": {
+      "max_tokens_per_week": 25000000,
+      "max_sessions_per_day": 5
+    },
+    "A18": {
+      "min_delay_h": 4,
+      "min_samples": 4,
+      "max_delay_h": 72,
+      "max_fires_per_day": 1,
+      "_doc": "Retime to reading: median delay from a surfaced run to the owner's next human message in that bot (delays over max_delay_h are unread, not slow reads).",
+      "min_shift_h": 2
+    },
+    "A19": {
+      "small_session_tokens": 300000,
+      "min_sessions": 3,
+      "window_days": 30,
+      "min_heavy_share": 0.5,
+      "heavy_efforts": [
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "heavy_models": [],
+      "effort_saving_fraction": 0.3,
+      "_doc": "Heavy model/effort on small CLI sessions. heavy_models: list of model ids treated as heavy (empty = effort only). Saved = sessions/wk x effort_saving_fraction (session-equivalents)."
+    },
+    "A20": {
+      "min_chat_mb": 15,
+      "min_turns_per_week": 1,
+      "min_wakes_per_week": 1,
+      "reset_tokens": 20000,
+      "turn_saving_fraction": 0.5,
+      "_doc": "Chat bloat: long main chat still getting turns/wakes. Turns/wk = turns in the 7 days ending at the bot's newest local chat data. Saved = turns/wk x turn_saving_fraction (run-equivalents); signal shows the size-based replay proxy tokens and ~$ per week.",
+      "fix": "Consolidate learnings into memory/skills/a file first, then reset the chat. $ is an upper-bound estimate (old history gets summarized)."
+    },
+    "A21": {
+      "max_always_on_tokens": 4000,
+      "max_routine_prompt_tokens": 1500,
+      "min_fires_per_week": 7,
+      "chars_per_token": 4,
+      "count_platform_sections": false,
+      "platform_sections": [
+        "profile",
+        "automations",
+        "agent_directory",
+        "mcp_instructions",
+        "timezone"
+      ],
+      "md_top_bots": 5,
+      "_doc": "Always-on load: owner-written text a bot carries on every turn = instructions (profile.json description, live) + memory (the rendered memory section from the store.db prompt snapshot, else memory/profile.md files). Tokens = chars / chars_per_token. Flag when that owner load > max_always_on_tokens, or a routine prompt > max_routine_prompt_tokens fires >= min_fires_per_week. The app's own sections (platform_sections: bot directory, routine/connector guidance) are shown in the report for context but never flagged while count_platform_sections is false: they grow with fleet size and owners can't trim them. Weekly re-send ~$ = load x model calls/wk (turns x calls/turn) + routine prompt tokens x fires x calls/run, at estimates.bot_usd_per_m_tokens: an upper-bound estimate (prompt caching may discount repeats). Saved = (turns + fires)/wk x the share of the owner load above the threshold (run-equivalents).",
+      "fix": "move how-to detail into skills, keep profile memory small and push history to the log, prune stale facts, and keep routine prompts short by pointing to files"
+    }
+  },
+  "idle_bots": {
+    "_doc": "A14 idle-bot tracking: idle = past min_days_unused on BOTH days since owner last viewed AND days since last human message. warn_days = early-warning list. Re-raise an already-raised idle bot only when its idle days grow by reraise_factor. Local signals only: confirm live before retiring a bot. Guardrail: a bot is listed idle only if its local store is fresh (require_fresh_store, newest entry within freshness.stale_days), at least min_signals local signals agree (view stamp and last human message both past min_days_unused), and no CLI session mapped to it within warn_days. Stale stores go to idle_unconfirmed (names only, no day counts); unread senders from stale stores are counted, not listed. wording_rule is copied into latest.json for the wake.",
+    "min_days_unused": 30,
+    "warn_days": 21,
+    "cli_recent_days": 30,
+    "max_listed": 8,
+    "max_warn_listed": 8,
+    "reraise_factor": 2.0,
+    "require_fresh_store": true,
+    "min_signals": 2,
+    "wording_rule": "Local view/message stamps can lag live use by weeks. Only bots in idle_bots may be called idle, and only as 'local data shows no owner activity since <date> (unconfirmed; check with the bot)'. Never state days unviewed as fact. idle_unconfirmed = stale local data, not judged: mention at most as a count. Recent coding counts as use."
+  },
+  "unread_sender": {
+    "_doc": "Bot keeps posting to the owner while its chat goes unopened. Flag when >= min_unseen_msgs bot->user messages were sent after lastViewedAt AND lastViewedAt is >= min_days_unviewed old. Fresh = newest unseen message within freshness.stale_days; only fresh, not-yet-raised (or unseen_msgs doubled) senders make the wake mode 'report'.",
+    "min_unseen_msgs": 3,
+    "min_days_unviewed": 14,
+    "max_listed": 5,
+    "reraise_factor": 2.0
+  },
+  "daily_usage": {
+    "_doc": "Per-day table. week: 'last_full' (most recent complete Mon-Sun; right for the Monday cron) or 'current' (this partial week). CLI cells are exact; est cells are estimates (#5 replay proxy, #16 turns/day x calls/turn). Main-chat replay per call is capped at context_cap_tokens.",
+    "week": "last_full",
+    "lookback_days": 21,
+    "top_bots": 10,
+    "context_cap_tokens": 200000,
+    "bytes_per_token": 4,
+    "table_layout": "split_spend",
+    "_table_layout_doc": "split_spend (default): per-bot Coding $ (exact) | Bot work ~$ (estimate) | Total (coding only when bot coverage is below min_bot_coverage), overall line, then 'Coding by day (exact)'. by_day: older layout, CLI by day + estimate (calls \u00b7 tokens) by day.",
+    "min_bot_coverage": 0.5,
+    "_min_bot_coverage_doc": "hide bot-work $ (show exact coding only) when fewer than this share of bots have local activity data newer than freshness.stale_days"
+  },
+  "trend": {
+    "_doc": "Week-over-week trend in the Monday report. months -> N full Mon-Sun weeks = ceil(months x weeks_per_month). Coding $ is exact (Grok Build CLI per-turn data, backfilled as far as it exists); bot work ~$ is an estimate from local data and persisted rows in history/weekly_totals.json; missing = n/a, never 0.",
+    "months": 1,
+    "weeks_per_month": 4.3,
+    "top_bots_persisted": 10,
+    "top_bots_in_summary": 5,
+    "movers": 3,
+    "comparable_coverage": 0.8,
+    "_comparable_doc": "Change vs prior week uses full totals only if both weeks' bot-day coverage is within this ratio; per-bot movers use bot work only when the bot was fully covered both weeks. Otherwise coding only."
+  },
+  "budget": {
+    "_doc": "Monthly line + early warning. Owner amounts live in local/owner.json (budget.monthly_usd, credit_balance_usd, balance_as_of). Rate = trailing rate_days average. warn when runway < warn_days or projected month-end > monthly budget; warn makes the wake a report.",
+    "warn_days": 7,
+    "rate_days": 7,
+    "outage_days": 7,
+    "outage_regex": "(?i)(provider_overloaded|rate|quota|credit|token)"
+  },
+  "new_bot_check": {
+    "_doc": "Daily no-AI template-install check (new_bot_check.py). Flags scheduled AI routines on new bots (or new routines on bots first seen within watch_days) that are denser than hourly or poll on a schedule without a quiet rule. Webhook/event triggers are good. POSTs only when something is flagged.",
+    "cron": "35 7 * * *",
+    "cron_comment": "# Penny daily spike + new-bot check (no AI)",
+    "watch_days": 14,
+    "max_fires_per_hour": 1,
+    "quiet_regex": "(?i)(stay quiet|stay silent|no filler|quiet if|silent if|nothing new)",
+    "known_file": "local/known_bots.json",
+    "summary_file": "summary/new_bots.json"
+  },
+  "alert_levels": {
+    "_doc": "First-run choice stored in local/owner.json alert_level: quiet | normal | chatty (default normal). normal = this file as is (no overrides). quiet/chatty override the dotted keys below: report size (output.top_n, output.stale_watch_n; latest.json stays under output.summary_max_bytes either way), repeat threshold (wake.worse_factor: re-raise only when this much worse), the quiet-week cost note (wake.always_weekly_cost) and the spike-guard jump factor.",
+    "quiet": {
+      "output.top_n": 3,
+      "output.stale_watch_n": 3,
+      "wake.worse_factor": 3.0,
+      "wake.always_weekly_cost": false,
+      "spike_guard.factor": 3.0
+    },
+    "normal": {},
+    "chatty": {
+      "output.top_n": 8,
+      "output.stale_watch_n": 8,
+      "wake.worse_factor": 1.5,
+      "wake.always_weekly_cost": true,
+      "spike_guard.factor": 1.5
+    }
+  },
+  "spike_guard": {
+    "_doc": "Fleet-wide daily spike guard, run by new_bot_check.py (no AI). Per enabled routine, from local routine-run transcripts: runs and est. $ in the last 24h vs the trailing daily average over baseline_days (needs >= min_baseline_days of history before the window). Spike = >= factor x baseline AND above the floors (min_runs_per_day + min_extra_runs, or min_usd_per_day). Loop = >= loop_min_runs runs inside loop_window_min that also exceed loop_schedule_factor x what the cron allows (event routines: loop_min_runs alone), or fail_repeat identical consecutive failures in runs.json. Stale data never alerts: the newest routine-run transcript must be within max_data_age_hours. Each routine+kind wakes at most once per cooldown_days. Wakes mode=spike.",
+    "enabled": true,
+    "factor": 2.0,
+    "baseline_days": 14,
+    "min_baseline_days": 7,
+    "min_runs_per_day": 6,
+    "min_extra_runs": 4,
+    "min_usd_per_day": 0.5,
+    "max_data_age_hours": 36,
+    "loop_window_min": 60,
+    "loop_min_runs": 6,
+    "loop_schedule_factor": 2.0,
+    "fail_repeat": 3,
+    "cooldown_days": 3,
+    "ledger_file": "ledger/spike.json",
+    "summary_file": "summary/spike.json"
+  },
+  "quick_audit": {
+    "_doc": "First-chat quick audit (quick_audit.py, no AI): one cheap local pass over routines, chats and always-on text; names the top_n burners with a one-line why. Output summary/quick_audit.json (<= max_bytes) + summary/quick_audit.md. Local data can lag live state: every item says confirm live. max_chat_items: long-chat items allowed in the top list (their $ is an upper-bound proxy).",
+    "top_n": 3,
+    "max_bytes": 2500,
+    "long_chat_mb": 15,
+    "max_fires_per_hour": 1,
+    "quiet_pct_noisy": 60,
+    "max_chat_items": 1
+  },
+  "calibration": {
+    "_doc": "Usage-page calibration (calibrate.py, no AI). Observations go to the owner-local file. bot_factor per window = (observed $ used - exact coding $) / Penny's bot-work estimate, only when bot data covers the window. summarize.py multiplies bot-work ~$ by the rolling median of the last rolling_n factors (clamped) and labels it 'calibrated' once >= min_observations exist; with fewer, output is unchanged. period_days_default: plan period length when only the reset date is known.",
+    "file": "local/calibration.json",
+    "min_observations": 2,
+    "rolling_n": 5,
+    "clamp": [
+      0.25,
+      4.0
+    ],
+    "period_days_default": 30,
+    "min_bot_coverage": 0.5
+  },
+  "unmapped_cli": {
+    "_doc": "Unmapped coding. Normal flow: a coding bot claims its own named project folder by messaging Penny DOGE once ('map <repo> -> me'); Penny runs claim_repo.py, which writes local/owner.json cli_repo_bots (bare roots refused; a repo already mapped to another bot is never overwritten and goes to cli_repo_conflicts). The owner is asked ONLY when report-week unmapped coding that is still unclaimed after claim_grace_days is large (>= min_usd, or >= min_share of coding and >= min_usd_floor), or when there is a claim conflict. Then latest.json gets unmapped_ask (top max_listed repos, a why line, one question). A repo is asked about once per ledger entry and re-asked only when its tokens grow by reraise_factor. Penny never auto-maps from guesses.",
+    "enabled": true,
+    "min_usd": 10,
+    "min_share": 0.25,
+    "min_usd_floor": 5,
+    "claim_grace_days": 3,
+    "max_listed": 5,
+    "reraise_factor": 2.0
+  }
+}

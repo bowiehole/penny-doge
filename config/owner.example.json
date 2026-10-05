@@ -1,0 +1,26 @@
+{
+ "_doc": "Owner-specific Penny settings. Copied to local/owner.json by install.sh if missing. Never ship local/. handled: items already dealt with outside Penny; they are seeded into the ledger as skipped and only re-raised if 2x worse. slug '*' = every routine of that bot. cli_repo_bots: repo-name prefix -> bot name, or {\"bot\": name, \"bot_id\": id}. resolved_repos: [{\"repo\": prefix, \"note\": why, \"before\": optional YYYY-MM-DD}] finished/handled repos (with before: only sessions created before that date); spend still attributed, never raised as A17. budget: monthly_usd (optional cap), credit_balance_usd + balance_as_of (YYYY-MM-DD) for runway; blank = not set. cli_repo_roots: extra folders whose first subfolder is a repo (added to config paths.cli_repo_roots). alert_level: quiet | normal | chatty (default normal; see config alert_levels). plan.monthly_usd: optional plan credit for Usage-page calibration. auto_slowdown: OFF unless the owner names a % and bots in chat.",
+ "exclude_bot_ids": [],
+ "handled": [],
+ "redact_terms": [],
+ "cli_repo_bots": {},
+ "cli_repo_roots": [],
+ "doge_bot_id": null,
+ "keep_bots": [],
+ "resolved_repos": [],
+ "budget": {
+  "monthly_usd": null,
+  "credit_balance_usd": null,
+  "balance_as_of": ""
+ },
+ "alert_level": "normal",
+ "plan": {
+  "monthly_usd": null,
+  "_doc": "optional: plan credit per period in $, so Usage-page % can be compared with Penny's $ estimates"
+ },
+ "auto_slowdown": {
+  "below_pct": null,
+  "bots": [],
+  "_doc": "OFF by default. Only the owner turns it on, in chat, by naming the % and the bots. When Usage-page % remaining drops below below_pct, the routine may send ONLY these named bots a slow-down request without asking first, and must tell the owner right after. Never pauses, edits or deletes anything itself."
+ }
+}
