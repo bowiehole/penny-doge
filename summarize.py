@@ -23,7 +23,10 @@ Skipped (the existing JSON does not support them, or they need a live/human chec
 Approximations:
   A1  "completion text repeats the same idle reason" is not in the JSON; quiet % + run count only.
   A9  only name/slug one-shot patterns; "finite watch past its end condition" needs prompt semantics.
-  A13 memory log size only (bytes via stat); lines-per-routine would need reading log contents.
+  A13 memory log size only (bytes via stat) for the flag; lines-per-routine would need reading log contents.
+Trim follow-up (A21 + A13): trim.py reads the flagged bots' own instruction/memory/log/routine-prompt text (no AI) and
+  writes line-level cut/shorten lists to summary/trim/<bot>.md (owner-local, never shipped). latest.json gets only a
+  'trim' block: lines, tok, ow (needs owner wording), and per-bot counts with the md path. Recommend only.
   A16 error count within the runs.json window (last 20, unordered); errorKind is not exported.
   A10 uses wake bursts in the whole local window (no 14-day cut available) + unreadState lastViewedAt.
 """
@@ -264,8 +267,10 @@ for i in range(len(L)):
             rd['rpw'], f"remove; keep {keep} as the single owner", rd['newest'])
 
 # A13 memory log bloat (bot level, size only)
+TRIM_FLAGS = {}   # bots flagged under A13 / A21 -> trim.py line-level follow-up (owner-local, summary/trim/)
 for bid, b in bots.items():
     if b['mem_kb'] > TH['A13']['max_log_kb'] and b['n_routines']:
+        TRIM_FLAGS.setdefault(bid, {})['A13'] = f"memory log {b['mem_kb']:g} KB"
         add(f"{bid}|memory-log", 'A13', bid, 'memory-log', f"memory log {b['mem_kb']:g} KB", 0,
             'log only changes from routines; roll up idle notes', b['newest'])
 
@@ -390,6 +395,7 @@ for bid, x in (ao.get('bots') or {}).items():
            f"~{load_t / 1e3:.1f}k tok/turn (instr {instr_t / 1e3:.1f}k + memory {mem_t / 1e3:.1f}k + app sections {plat_t / 1e3:.1f}k)"
            + (f", prompt {big[1] / 1e3:.1f}k×{big[2]:g}/wk" if big else "") + f", ~${usd_wk:.2f}/wk est.")
     add(f"{bid}|always-on", 'A21', bid, 'always-on', sig, (turns_wk + fires) * excess, a['fix'], bots[bid].get('newest'))
+    TRIM_FLAGS.setdefault(bid, {})['A21'] = sig
 
 # ---------- one candidate per routine (best advice), staleness, week-over-week ----------
 hist_dir = P(PATHS['history_dir'])
@@ -990,6 +996,13 @@ summary = dict(
     unread_counts=dict(flagged=len(unread_senders), wake=len(unread_pending), unconfirmed=unread_unconfirmed),
     monthly=monthly, trend=trend, daily_usage=daily_usage, daily_table_md=os.path.relpath(os.path.join(P(PATHS['summary_dir']), 'daily_table.md'), HOME),
     note='Local-file signals are unconfirmed; live-check the owning bot before reporting. Names and counts only.')
+# line-level trim follow-up (A21/A13): detail lists go to summary/trim/<bot>.md (owner-local); latest.json gets counts only
+try:
+    from trim import run as trim_run
+    trim = trim_run(TRIM_FLAGS, CFG, HOME)
+except Exception as e:   # never let the follow-up break the weekly summary
+    print(f'trim follow-up failed: {e!r}', file=sys.stderr); trim = None
+if trim: summary['trim'] = trim
 limit = CFG['output']['summary_max_bytes']
 def size(): return len(json.dumps(summary, separators=(',', ':')).encode())
 while size() > limit and summary['stale_watch']: summary['stale_watch'].pop()
@@ -1002,6 +1015,8 @@ while size() > limit and summary['trend']['per_bot']: summary['trend']['per_bot'
 for tbl in ('est', 'cli_exact'):  # then shrink the day table: drop the smallest named rows (keep 'Other')
     while size() > limit and len([n for n in daily_usage[tbl] if n != 'Other']) > 1:
         daily_usage[tbl].pop([n for n in daily_usage[tbl] if n != 'Other'][-1]); daily_usage['trimmed'] = True
+if trim:   # keep the trim totals; drop per-bot rows (smallest first) before touching candidates
+    while size() > limit and trim['bots']: trim['bots'].pop()
 while size() > limit and summary['candidates']: summary['candidates'].pop()
 sd = P(PATHS['summary_dir'])
 dump(summary, os.path.join(sd, 'latest.json'), compact=True)

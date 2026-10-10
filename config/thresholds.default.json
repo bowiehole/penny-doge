@@ -151,6 +151,25 @@
       "md_top_bots": 5,
       "_doc": "Always-on load: owner-written text a bot carries on every turn = instructions (profile.json description, live) + memory (the rendered memory section from the store.db prompt snapshot, else memory/profile.md files). Tokens = chars / chars_per_token. Flag when that owner load > max_always_on_tokens, or a routine prompt > max_routine_prompt_tokens fires >= min_fires_per_week. The app's own sections (platform_sections: bot directory, routine/connector guidance) are shown in the report for context but never flagged while count_platform_sections is false: they grow with fleet size and owners can't trim them. Weekly re-send ~$ = load x model calls/wk (turns x calls/turn) + routine prompt tokens x fires x calls/run, at estimates.bot_usd_per_m_tokens: an upper-bound estimate (prompt caching may discount repeats). Saved = (turns + fires)/wk x the share of the owner load above the threshold (run-equivalents).",
       "fix": "move how-to detail into skills, keep profile memory small and push history to the log, prune stale facts, and keep routine prompts short by pointing to files"
+    },
+    "trim": {
+      "_doc": "Line-level trim follow-up for bots flagged under A21 (always-on load) or A13 (memory log). No AI: exact/near-duplicate facts (normalized token Jaccard >= dup_jaccard, and no differing numbers), superseded facts (an older fact on the same subject as a newer one: same 'Label:' prefix or the same first subject_words words, token Jaccard >= supersede_jaccard -> cut, lower -> needs owner wording), dated one-offs in always-on memory ([episode] tags or past-only dates older than oneoff_age_days -> belongs in the log), short idle notes in the log (<= idle_max_tokens, no links) rolled up when >= rollup_min share a subject and most words, and instruction / routine-prompt paragraphs or memory facts over para_max_tokens / fact_max_tokens, shortened by fixed filler-word rules (else 'needs owner wording', listed only when it could reclaim >= min_owner_wording_tokens). Lines carrying rule words (never, always, must, only, required...) are never cut except as exact duplicates. Tokens = chars / A21.chars_per_token. Output: summary/trim/<bot>.md (owner-local) + a compact 'trim' block in latest.json. Recommend only: the owner picks lines; the owning bot applies them.",
+      "enabled": true,
+      "dir": "summary/trim",
+      "dup_jaccard": 0.85,
+      "dup_max_unique_words": 2,
+      "supersede_jaccard": 0.5,
+      "subject_words": 5,
+      "oneoff_age_days": 14,
+      "rollup_min": 3,
+      "para_max_tokens": 120,
+      "fact_max_tokens": 100,
+      "min_rewrite_saving": 0.08,
+      "min_line_tokens": 3,
+      "max_lines_per_bot": 25,
+      "show_chars": 400,
+      "min_owner_wording_tokens": 10,
+      "idle_max_tokens": 80
     }
   },
   "idle_bots": {

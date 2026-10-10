@@ -15,6 +15,7 @@
 | `quick_audit.py` | First-chat quick audit: top 1–3 likely burners (no AI) |
 | `calibrate.py` | Usage-page calibration: records readings, burn rate, run-out date, estimate gap, correction factor (no AI) |
 | `claim_repo.py` | Repo claims from coding bots ("map <repo> → me"): writes the owner repo map; refuses bare roots; never overwrites (conflicts go to the owner) |
+| `trim.py` | Line-level trim lists for A21/A13 bots: old → new text, ~tokens per line (no AI, recommend only; called by `summarize.py`, output owner-local in `summary/trim/`) |
 | `penny_common.py` | Shared helpers (alert level, cron rates, spend estimates, calibration factor) |
 | `config/thresholds.default.json` | Generic thresholds with `_doc` notes (install copies it to `thresholds.json`) |
 | `config/owner.example.json` | Blank owner file (install copies it to `local/owner.json`) |
@@ -24,7 +25,7 @@
 
 ## Never ships (owner-only, created on the owner's box)
 
-`local/` (owner.json, known_bots.json, calibration.json (Usage-page readings), inventory_local.md with the owner's findings, roster, outcomes log and own-cost table), `ledger/` (incl. spike.json cooldowns), `history/`, `summary/` (incl. quick_audit.json/.md, spike.json), `logs/`, `.webhook.json`, `.webhook.json.bak`, `cron.log`, `wake_queue.log`, `config/thresholds.json` (owner-tuned copy), `config/routine_prompt.md` (notes on the owner's live routine), and the collector outputs `*.json` in the Penny DOGE folder (fleet_scan.json, cli_sessions.json, daily_usage.json, always_on.json, routine_*.json).
+`local/` (owner.json, known_bots.json, calibration.json (Usage-page readings), inventory_local.md with the owner's findings, roster, outcomes log and own-cost table), `ledger/` (incl. spike.json cooldowns), `history/`, `summary/` (incl. quick_audit.json/.md, spike.json, trim/<bot>.md line-level trim lists, which quote the owner's bot text), `logs/`, `.webhook.json`, `.webhook.json.bak`, `cron.log`, `wake_queue.log`, `config/thresholds.json` (owner-tuned copy), `config/routine_prompt.md` (notes on the owner's live routine), and the collector outputs `*.json` in the Penny DOGE folder (fleet_scan.json, cli_sessions.json, daily_usage.json, always_on.json, routine_*.json).
 
 ## Routines the owner's Penny DOGE bot needs
 

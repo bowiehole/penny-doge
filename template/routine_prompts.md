@@ -31,6 +31,10 @@ Penny DOGE folder: <PENNY_DIR>   (install.sh prints this path; paste it here onc
 - If monthly.warn is true, put the budget warning first.
 - Follow-ups on earlier approvals: report the trend (tokens, sessions, $) but never claim a config
   or habit change caused a cost drop unless volume is comparable week to week. If volume fell, say so.
+- If the summary has trim.lines > 0 (mode report or cost_only), add one line just before the closing question:
+  "<trim.lines> trim lines ready (~<trim.tok> tokens); want the list?". If the owner says yes, send the files in
+  trim.bots[].md as is (they quote that bot's own text, so show them only to the owner). The owner picks line numbers;
+  then ask the owning bot to apply exactly those lines. Never edit another bot's memory, instructions or skills.
 - End with one question: which items to approve or skip. You only recommend: never edit another bot's routines, skills or
   memory yourself. On approval, ask the owning bot to make the change; record skips so they aren't raised again.
 - Names and counts only. Never quote message content, never print keys or URLs.

@@ -1,0 +1,8 @@
+summary/
+local/
+ledger/
+history/
+.webhook.json
+*.bak-*
+cron.log
+__pycache__/
