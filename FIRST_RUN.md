@@ -53,6 +53,7 @@ At the end of first-run setup, follow that skill's "At the end of first-run setu
 1. If a routine named **Settings check-in** already exists, keep it.
 2. Otherwise create it **once**, 14 days from today, at a daytime hour in the confirmed timezone, at an off-the-hour minute (for example 10:17). Prompt: `Run the template-settings-checkin skill (When it fires).`
 3. The one-line notice is already the last line of the first-run message above.
+4. If a routine named **Penny DOGE health check** doesn't exist yet, create it: scheduled weekly, Mondays at about 8:15am in the confirmed timezone (after the 7:05 scan), with the prompt in template/routine_prompts.md and `<PENNY_DIR>` filled in. It runs `health_check.py --repair` and stays silent unless cron is broken or scans were missed. This is what catches a box update that silently removed cron.
 
 When it fires, the skill sends one message listing Penny DOGE's settings in plain words:
 - the weekly scan day and time, and the daily new-bot check

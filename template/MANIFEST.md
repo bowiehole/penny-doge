@@ -5,7 +5,8 @@
 | Path | Purpose |
 |---|---|
 | `README.md`, `FIRST_RUN.md` | What Penny DOGE does or never does, install, webhook setup, knobs, data limits; first-run message and questions |
-| `install.sh` | Idempotent installer: folders, default config, both cron lines (keeps all other crontab lines) |
+| `install.sh` | Idempotent installer: installs/starts cron if missing (no systemd; loud non-zero exit if it can't), folders, default config, both cron lines (keeps all other crontab lines) |
+| `health_check.py` | No-AI health check: crontab + both Penny lines, cron daemon, last scheduled runs from cron.log; one JSON line; `--repair` re-runs install.sh |
 | `setup_webhook.sh` | Webhook walkthrough: URL + key, one `{"probe": true}`, saves `.webhook.json` (chmod 600) only on a 2xx |
 | `weekly_scan.sh`, `run_all.sh` | Weekly no-AI pipeline (`--dry-run`, `--probe`) |
 | `fleet_scan.py`, `routine_runs.py`, `routine_quiet.py`, `routine_cost.py`, `routine_engagement.py`, `cli_usage.py`, `daily_usage.py`, `always_on.py` | Local-file collectors (always_on.py: lengths only, for A21) |
@@ -19,7 +20,7 @@
 | `penny_common.py` | Shared helpers (alert level, cron rates, spend estimates, calibration factor) |
 | `config/thresholds.default.json` | Generic thresholds with `_doc` notes (install copies it to `thresholds.json`) |
 | `config/owner.example.json` | Blank owner file (install copies it to `local/owner.json`) |
-| `template/routine_prompts.md` | Prompts for the "Penny DOGE threshold wake" (report / cost_only / new_bot_check / spike) and "Settings check-in" routines, plus chat instructions (quick audit, Usage-page calibration, auto-slowdown, alert level) |
+| `template/routine_prompts.md` | Prompts for the "Penny DOGE threshold wake" (report / cost_only / new_bot_check / spike), "Penny DOGE health check" and "Settings check-in" routines, plus chat instructions (quick audit, Usage-page calibration, auto-slowdown, alert level) |
 | `template/skills/template-settings-checkin/SKILL.md` | Settings check-in skill (install it as a skill on the Penny DOGE bot) |
 | `inventory.md` | Signals, gaps, advice catalog, design, outcomes-log template and template notes (generic only) |
 
@@ -31,5 +32,6 @@
 
 1. **Penny DOGE threshold wake**: webhook trigger, created during setup (README "Webhook setup").
 2. **Settings check-in**: one-time, 14 days after first run, rescheduled by the skill (FIRST_RUN.md section 4).
+3. **Penny DOGE health check**: scheduled, Mondays ~8:15am owner time; runs `health_check.py --repair` and is silent when all is well (template/routine_prompts.md).
 
-The crons (weekly scan, daily new-bot check) are box crontab lines, not routines, and use no model.
+The crons (weekly scan, daily new-bot check) are box crontab lines, not routines, and use no model. The health check is a routine on purpose: it must still run when cron is dead.

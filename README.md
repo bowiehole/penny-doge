@@ -29,12 +29,32 @@ Penny DOGE (as in penny pincher) looks at how your bots, routines and CLI coding
 
 ```bash
 python3 quick_audit.py     # first chat: top 1-3 likely burners (no AI, no cron, no webhook needed)
-bash install.sh            # idempotent: folders, config, both cron lines; keeps every other crontab line
+bash install.sh            # idempotent: installs/starts cron if missing, folders, config, both cron lines; keeps every other crontab line
 bash setup_webhook.sh      # webhook walkthrough + one probe (see below)
 bash weekly_scan.sh --dry-run   # full scan without the POST; check summary/daily_table.md
 ```
 
 `install.sh` copies `config/thresholds.default.json` to `config/thresholds.json` and `config/owner.example.json` to `local/owner.json` if they're missing. Running it again changes nothing.
+
+**Cron itself.** Many agent boxes run under tini, not systemd, so a box update or restart can remove the cron package or stop the daemon, and nothing restarts it. `install.sh` checks for both: if `crontab` or the daemon is missing it runs `apt-get update && apt-get install -y cron` (as root, or with passwordless `sudo`) and starts the daemon with `service cron start` or plain `cron` (no systemd needed). It then confirms `crontab -l` works, both Penny lines are present and a cron process is running. If any step fails it exits non-zero with `PENNY DOGE: cron is NOT running; scheduled scans will not fire.`, the problem, and the one fix to run. It never removes or reorders other crontab lines.
+
+### Troubleshooting: the Monday scan didn't arrive
+
+1. `python3 health_check.py` prints one JSON line saying what's wrong (see below).
+2. `bash install.sh` re-installs or starts cron and restores any missing Penny line. Read its last lines: either `cron: OK ...` or the loud `PENNY DOGE: cron is NOT running` message with the fix.
+3. If cron is fine but runs were missed, check `cron.log` (one line per run, box local time) and `logs/run_all.last.log`.
+
+## Health check
+
+`health_check.py` (no AI, takes about a second) checks that the box timer is alive:
+
+- the `crontab` command exists and both Penny lines (weekly scan, daily new-bot check) are in the crontab
+- a cron daemon is running
+- `cron.log` shows a **scheduled** weekly scan within 8 days and a scheduled daily new-bot check within 2 days. A run counts as scheduled only when its log time matches the cron schedule, so manual or dry runs don't hide a dead timer. Right after a fresh install (`logs/cron_since`) a run that isn't due yet isn't counted as missed.
+
+It prints one JSON line, `{"ok", "problems": [...], "last_weekly", "last_daily", "repaired"}` (plus `fix` or `note` when useful), never prints secrets, and always exits 0. With `--repair`, if anything is wrong it runs `bash install.sh`, checks again and sets `repaired`. Missed runs can't be repaired after the fact. If cron came back, `note` says the warning clears after the next scheduled run.
+
+The health check runs from a **chat-side routine** (template/routine_prompts.md, "Penny DOGE health check"), not from cron, so it still works when cron is dead. It stays silent when everything is fine.
 
 Then send the first-run message in **FIRST_RUN.md** and fill in `local/owner.json` from the owner's answers.
 

@@ -40,6 +40,14 @@ Penny DOGE folder: <PENNY_DIR>   (install.sh prints this path; paste it here onc
 - Names and counts only. Never quote message content, never print keys or URLs.
 ```
 
+## Penny DOGE health check (scheduled, Mondays ~8:15am owner time)
+
+Weekly schedule, after the 7:05 scan. It's a routine, not a cron line, so it still runs when the box's cron is dead.
+
+```
+Run `python3 <PENNY_DIR>/health_check.py --repair`. If ok is true and repaired is false, send nothing. Otherwise send the owner ONE line: what was wrong (plain words), whether the repair worked, and, if it didn't, the one thing they need to do. Budget: 3 tool calls, no subagents.
+```
+
 ## Penny DOGE chat instructions (add to the Penny DOGE bot's instructions)
 
 ```
