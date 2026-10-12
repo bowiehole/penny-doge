@@ -2,6 +2,16 @@ import json,glob,os,shutil,sqlite3,collections,datetime as dt,re,statistics
 A='/home/box/agent-data/agents'; T='/home/box/agent-data/agent-transcripts'
 def fmt(ms): return dt.datetime.fromtimestamp(ms/1000).strftime('%Y-%m-%d %H:%M') if ms else '-'
 out={}
+# Live chat activity: since the Oct 6 box move, per-bot store.db files are no longer written on this box
+# (only -shm is touched); the synced search index is. Read timestamps/roles/lengths only, never bodies.
+IDX={}
+_si='/home/box/agent-data/search-index.db'
+if os.path.exists(_si):
+    _t='/tmp/doge_search-index.db'; shutil.copy(_si,_t)
+    [shutil.copy(_si+s_,_t+s_) if os.path.exists(_si+s_) else (os.path.exists(_t+s_) and os.remove(_t+s_)) for s_ in ('-wal','-shm')]
+    _c=sqlite3.connect(_t)
+    for a_,n_,mx_,nu_,ln_ in _c.execute("select agent_id,count(*),max(timestamp_ms),sum(role='user'),sum(length(body)) from messages group by agent_id"): IDX[a_]=dict(n=n_,lastMs=mx_,user=nu_,chars=ln_)
+    _c.close()
 for d in sorted(glob.glob(A+'/*/')):
     aid=os.path.basename(d[:-1])
     if not os.path.exists(d+'profile.json'): continue
@@ -21,6 +31,9 @@ for d in sorted(glob.glob(A+'/*/')):
     r['entries']=len(E)
     tsl=[e.get('timestampMs') for e in E if e.get('timestampMs')]
     r['first']=fmt(min(tsl)) if tsl else None; r['last']=fmt(max(tsl)) if tsl else None; r['lastMs']=max(tsl) if tsl else 0
+    r['store_last']=r['last']; r['index']=IDX.get(aid)
+    if r['index'] and (r['index']['lastMs'] or 0)>r['lastMs']:   # newer activity from the synced search index
+        r['lastMs']=r['index']['lastMs']; r['last']=fmt(r['lastMs']); r['last_src']='search-index'
     cnt=collections.Counter()
     human=[];botsends=[]
     for e in E:

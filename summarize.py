@@ -345,6 +345,9 @@ for rp, L in by19.items():
         max(from_utc(x.get('updated', '')) for x in L))
     flags[-1]['bot_name'] = bname or f"CLI repo {rp}"
 
+def _tx_mtime(bid):
+    p_ = os.path.join(os.path.dirname(CFG['paths']['agents_dir']), 'agent-transcripts', bid, bid + '.jsonl')
+    return dt.datetime.fromtimestamp(os.path.getmtime(p_)) if os.path.exists(p_) else None
 # A20 chat bloat: long main chat that still gets turns or routine wakes
 a = TH['A20']; dud0 = load(P('daily_usage.json'), {}) or {}; DU0 = CFG['daily_usage']
 for bid, b in bots.items():
@@ -361,7 +364,8 @@ for bid, b in bots.items():
     per_call = min(chat_tok, DU0['context_cap_tokens'])
     tok_wk = (turns_wk + wakes_wk) * (db_.get('calls_per_turn') or 1) * max(per_call - a['reset_tokens'], 0)
     add(f"{bid}|chat-bloat", 'A20', bid, 'main-chat', f"chat {b['chat_mb']:g} MB, {turns_wk} turns + {wakes_wk:.0f} wakes/wk, ~{tok_wk / 1e6:.0f}M replay tok/wk (~${tok_wk * EST['bot_usd_per_m_tokens'] / 1e6:.0f})",
-        (turns_wk + wakes_wk) * a['turn_saving_fraction'], 'summarize and reset the chat, or move its routines to a fresh short-chat bot', ce)
+        (turns_wk + wakes_wk) * a['turn_saving_fraction'], 'summarize and reset the chat, or move its routines to a fresh short-chat bot',
+        min(x for x in (ce, _tx_mtime(bid)) if x) if ce else None)   # chat size is only as fresh as the transcript file it comes from
 
 # A21 always-on load: text carried on every turn (instructions + memory + visible platform sections), lengths only
 a = TH['A21']; ao = load(P('always_on.json'), {}) or {}; CPT_ = a['chars_per_token']
@@ -983,6 +987,10 @@ summary = dict(
     counts=dict(over_threshold=len(cands), fresh=len(fresh), excluded_stale=len(stale),
                 suppressed_already_raised=suppressed, wake_eligible=len(eligible)),
     unmapped_ask=unmapped_ask,
+    routine_gap_note=(None if (newest_run and newest_run >= STALE_BEFORE) else
+        f"Routine-run history has no local records after {fmt(newest_run) if newest_run else 'the first scan'}: routines now run off this computer "
+        "and leave no transcript or run log here, so routine costs and quiet-run checks are not counted. Bot ~$ figures cover chat only; "
+        "use a Usage page screenshot to check routine spend."),
     candidates=[compact(c) for c in top],
     stale_watch=[compact(c, full=False) for c in stale[:sw_n]],
     idle_bots=[{k: v for k, v in x.items() if k != 'idle_days'} for x in idle[:IB['max_listed']]],

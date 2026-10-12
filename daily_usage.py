@@ -60,6 +60,14 @@ for d in sorted(glob.glob(A + '/*/')):
         users = 0; calls, rep = replay(tp)
         with open(tp, errors='replace') as f: users = sum(1 for l in f if l.startswith('{"role":"user"'))
         cpt = calls / max(users, 1); rpc = rep / max(calls, 1) / DU['bytes_per_token']
+    # after the store stops (Oct 6 box move), count user-role messages per day from the synced search index
+    si = '/tmp/doge_search-index.db'   # copy made by fleet_scan.py
+    if os.path.exists(si):
+        ci = sqlite3.connect(f'file:{si}?mode=ro', uri=True)
+        for (tsx,) in ci.execute("select timestamp_ms from messages where agent_id=? and role='user' and timestamp_ms>?", (aid, newest)):
+            turns['idx%d' % tsx] = tsx
+        mx = ci.execute('select max(timestamp_ms) from messages where agent_id=?', (aid,)).fetchone()[0] or 0
+        newest = max(newest, mx); ci.close()
     per_day = collections.Counter(lday(t) for t in turns.values())
     for k, n in per_day.items():
         if k: b['est_chat'][k] = [n, round(n * cpt), round(n * cpt * rpc)]
