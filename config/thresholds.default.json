@@ -43,7 +43,7 @@
     "cli_usd_per_tick": 1e-10,
     "cli_window_days": 7,
     "cli_batch_target_sessions_per_week": 3,
-    "_bot_usd_doc": "Converts bot-work estimates (replay-token proxy + est. calls x est_output_tokens_per_call) to ~$. If both input and output prices are set they are used; otherwise the blended price. Default blended $0.29/M = total $ / total tokens of the exact Grok Build CLI data on Oct 2, 2026 (208.6M tokens, $60.87, ~94% cached input). Replay proxy ignores cache discounts, so this is a rough order of magnitude.",
+    "_bot_usd_doc": "Converts bot-work estimates (replay-token proxy + est. calls x est_output_tokens_per_call) to ~$. If both input and output prices are set they are used; otherwise the blended price. Default blended ~$0.29 per million tokens, a typical cache-heavy CLI mix; tune it from your own Usage page. Replay proxy ignores cache discounts, so this is a rough order of magnitude.",
     "bot_usd_per_m_tokens": 0.29,
     "bot_usd_per_m_input_tokens": null,
     "bot_usd_per_m_output_tokens": null,
