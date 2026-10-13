@@ -3,6 +3,7 @@
 #   weekly_scan.sh            full run: scan, summarize, POST the wake only if over threshold and new/worse
 #   weekly_scan.sh --dry-run  everything except the POST (still writes history + summary)
 #   weekly_scan.sh --probe    POST {"probe": true} to the webhook and print only the HTTP status
+trap 'rm -f /tmp/doge_*.db /tmp/doge_*.db-wal /tmp/doge_*.db-shm' EXIT   # temp DB copies hold message text
 # Config: config/thresholds.json (generic). Owner data: local/owner.json, ledger/, .webhook.json (chmod 600).
 set -u
 # cron's PATH often omits ~/.local/bin (where grok lives); keep interactive shells unchanged
@@ -30,3 +31,4 @@ if [ "$MODE" = dry-run ]; then WAKE="$(python3 wake.py --post --dry-run)"; else 
 WALL=$(python3 -c "import time;print(round(time.time()-$START,1))")
 log "summary $RES"
 log "end wall_s=$WALL $WAKE"
+
